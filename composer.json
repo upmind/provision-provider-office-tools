@@ -1,0 +1,31 @@
+{
+    "name": "upmind/provision-provider-pro-email",
+    "description": "Provisioning category/provider for professional email services",
+    "type": "library",
+    "license": "GPL-3.0-only",
+    "authors": [
+        {
+            "name": "Nicolás Ramírez",
+            "email": "nicolas.ramirez@upmind.com"
+        }
+    ],
+    "require": {
+        "php": "8.1 - 8.3",
+        "upmind/provision-provider-base": "^4.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Upmind\\ProvisionProviders\\ProEmail\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Upmind\\ProvisionProviders\\ProEmail\\LaravelServiceProvider"
+            ]
+        }
+    }
+}
