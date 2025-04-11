@@ -11,6 +11,8 @@ use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\Result;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
+use Upmind\ProvisionProviders\OfficeTools\Data\AccountIdentifierParams;
+use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
 
 
 /**
