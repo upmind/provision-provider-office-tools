@@ -7,7 +7,6 @@ namespace Upmind\ProvisionProviders\OfficeTools\Providers\Titan;
 use Upmind\ProvisionBase\Exception\ProvisionFunctionError;
 use Upmind\ProvisionBase\Provider\Contract\ProviderInterface;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
-use Upmind\ProvisionProviders\AutoLogin\Providers\Titan\Data\Configuration;
 use Upmind\ProvisionProviders\OfficeTools\Category;
 use Upmind\ProvisionProviders\OfficeTools\Data\AccountIdentifierParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
@@ -16,6 +15,8 @@ use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\Result;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
+use Upmind\ProvisionProviders\OfficeTools\Providers\Titan\Data\Configuration;
+
 class Provider extends Category implements ProviderInterface
 {
     protected Configuration $configuration;
