@@ -16,7 +16,6 @@ use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\Result;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
-
 class Provider extends Category implements ProviderInterface
 {
     protected Configuration $configuration;
@@ -31,7 +30,7 @@ class Provider extends Category implements ProviderInterface
     {
         return AboutData::create()
             ->setName('Titan')
-            ->setDescription('Titan email provider operations are not supported')
+            ->setDescription('Titan email provider')
             ->setLogoUrl('https://api.upmind.io/images/logos/provision/titan-logo_2x.png');
     }
 
