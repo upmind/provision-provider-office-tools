@@ -1,27 +1,42 @@
 <?php
 
-
 declare(strict_types=1);
 
 namespace Upmind\ProvisionProviders\OfficeTools\Data;
 
-use Upmind\ProvisionBase\Provider\DataSet\ResultData;
+use Upmind\ProvisionBase\Provider\DataSet\DataSet;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
 
 /**
- * @property-read string $reqID Request ID
- * @property-read int $titanOrderId Unique order ID for the domain provisioned with Titan
- * @property-read string $status Status of the order (e.g., active, pending, suspended, deleted)
- * @property-read array|null $firstEmailAccountDetails Details of the first email account
+ * Generic result of an email service creation operation.
+ *
+ * @property-read string $requestId Unique identifier for the creation request
+ * @property-read string $serviceId Unique identifier for the created service/order
+ * @property-read string $status Status of the created service (e.g., active, pending)
+ * @property-read string|null $username Primary username or email for the service
+ * @property-read string|null $serviceIdentifier Identifier for the service (e.g., domain)
+ * @property-read string|null $packageIdentifier Identifier for the plan/package
+ * @property-read array|null $primaryAccount Details of the primary account created
+ * @property-read array|null $metadata Provider-specific metadata or additional data
+ * @property-read string|null $message Optional success/error message
  */
-class CreateResult extends ResultData
+class CreateResult extends DataSet
 {
     public static function rules(): Rules
     {
         return new Rules([
-            'orderId' => ['required', 'integer'],
-            'status' => ['required', 'string', 'in:active,pending,suspended,deleted'],
-            'extra' => ['nullable', 'array'],
+            'requestId' => ['required', 'string'],
+            'serviceId' => ['required', 'string'],
+            'status' => ['required', 'string', 'in:active,pending,suspended,deleted,failed'],
+            'username' => ['nullable', 'string'],
+            'serviceIdentifier' => ['nullable', 'string'],
+            'packageIdentifier' => ['nullable', 'string'],
+            'primaryAccount' => ['nullable', 'array'],
+            'primaryAccount.email' => ['nullable', 'email'],
+            'primaryAccount.loginToken' => ['nullable', 'string'],
+            'primaryAccount.isAdmin' => ['nullable', 'boolean'],
+            'metadata' => ['nullable', 'array'],
+            'message' => ['nullable', 'string'],
         ]);
     }
 }
