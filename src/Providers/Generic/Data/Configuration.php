@@ -37,6 +37,7 @@ class Configuration extends DataSet
             'has_terminate' => ['boolean'],
             'terminate_endpoint_http_method' => ['required_if:has_terminate,1', 'string', 'in:post,put,patch,get,delete'],
             'terminate_endpoint_url' => ['required_if:has_terminate,1', 'url'],
+            'control_panel_url' => ['required', 'url'],
         ]);
     }
 }

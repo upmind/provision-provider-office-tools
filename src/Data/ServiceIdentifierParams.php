@@ -17,7 +17,8 @@ class ServiceIdentifierParams extends DataSet
     {
         return new Rules([
             'serviceId' => ['required', 'integer'],
-            'extra' => ['array', 'string'],
+            'reason' => ['required', 'string'],
+            'note' => ['nullable', 'string'],
         ]);
     }
 }

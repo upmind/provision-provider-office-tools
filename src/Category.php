@@ -6,13 +6,14 @@ namespace Upmind\ProvisionProviders\OfficeTools;
 
 use Upmind\ProvisionBase\Provider\BaseCategory;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
+use Upmind\ProvisionProviders\OfficeTools\Data\LoginParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
+use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\Result;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
-use Upmind\ProvisionProviders\OfficeTools\Data\AccountIdentifierParams;
-use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
+use Upmind\ProvisionProviders\OfficeTools\Data\UnsuspendResult;
 
 
 /**
@@ -39,7 +40,7 @@ abstract class Category extends BaseCategory
     /**
      * Obtain a signed login URL for the service that the system client can redirect to.
      */
-    abstract public function login(AccountIdentifierParams $params): LoginResult;
+    abstract public function login(LoginParams $params): LoginResult;
 
     /**
      * Change the package of an email service.
@@ -54,7 +55,7 @@ abstract class Category extends BaseCategory
     /**
      * Unsuspend an email service.
      */
-    abstract public function unsuspend(ServiceIdentifierParams $params): Result;
+    abstract public function unsuspend(ServiceIdentifierParams $params): UnsuspendResult;
 
     /**
      * Permanently delete an email service.

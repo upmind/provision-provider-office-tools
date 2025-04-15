@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace Upmind\ProvisionProviders\OfficeTools\Providers\Titan;
 
-use _PHPStan_ce0aaf2bf\Nette\Neon\Exception;
+use Firebase\JWT\JWT;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use Upmind\ProvisionBase\Provider\Contract\ProviderInterface;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
 use Upmind\ProvisionProviders\OfficeTools\Category;
-use Upmind\ProvisionProviders\OfficeTools\Data\AccountIdentifierParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
+use Upmind\ProvisionProviders\OfficeTools\Data\LoginParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\Result;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
+use Upmind\ProvisionProviders\OfficeTools\Data\UnsuspendResult;
 use Upmind\ProvisionProviders\OfficeTools\Providers\Generic\Data\Configuration;
+
 
 class Provider extends Category implements ProviderInterface
 {
@@ -28,6 +30,7 @@ class Provider extends Category implements ProviderInterface
         $this->configuration = $configuration;
     }
 
+
     public static function aboutProvider(): AboutData
     {
         return AboutData::create()
@@ -36,13 +39,8 @@ class Provider extends Category implements ProviderInterface
             ->setLogoUrl('https://api.upmind.io/images/logos/provision/titan-logo.png');
     }
 
-    /**
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Upmind\ProvisionBase\Exception\ProvisionFunctionError
-     */
     public function create(CreateParams $params): CreateResult
     {
-        throw new \Exception('Create is not supported for Titan Email');
         $domain = $params->domain;
 
         // Map generic params to Titan-specific payload
@@ -51,15 +49,15 @@ class Provider extends Category implements ProviderInterface
             'customerId' => $params->customerId,
             'customerEmailAddress' => $params->customerEmail,
             'planType' => $params->plan,
-        ];
+            'noOfAccounts' => $params->seatCount,
 
+        ];
         // Map optional fields
         $optionalFields = [
             'customerName' => 'customerName',
             'alternateEmail' => 'alternateEmailAddress',
             'password' => 'password',
             'country' => 'customerCountry',
-            'accountCount' => 'noOfAccounts',
             'expiryDate' => 'expiryDate',
             'sendWelcomeEmail' => 'sendWelcomeEmail',
             'primaryAccount' => 'firstEmailAccount',
@@ -86,10 +84,6 @@ class Provider extends Category implements ProviderInterface
                 if (isset($params->billing[$generic])) {
                     $payload[$titan] = $params->billing[$generic];
                 }
-            }
-
-            if (isset($params->billing['amount']) && $params->billing['currency'] === 'USD') {
-                $payload['chargedUSDAmount'] = $params->billing['amount'];
             }
         }
 
@@ -121,11 +115,14 @@ class Provider extends Category implements ProviderInterface
                 RequestOptions::JSON => $payload,
             ]);
 
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            if (!isset($responseData['status']) || $responseData['status'] !== 'active') {
-                $this->errorResult('Failed to create Titan email account', $responseData);
+            $statusCode = $response->getStatusCode();
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $this->errorResult('Failed to create Titan email account', [
+                    'statusCode' => $statusCode,
+                    'response' => (string)$response->getBody(),
+                ]);
             }
+            $responseData = json_decode($response->getBody()->getContents(), true);
 
             // Map Titan response to generic CreateResult
             $resultData = [
@@ -150,47 +147,246 @@ class Provider extends Category implements ProviderInterface
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $this->errorResult('Failed to create Titan email account', [
                 'error' => $e->getMessage(),
-                'response' => $e->hasResponse() ? (string)$e->getResponse()->getBody() : null
+                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null
             ]);
         }
     }
 
     protected function client(): Client
     {
+
+
         return new Client([
-            'base_uri' => rtrim($this->configuration->base_url, '/'),
+            'base_uri' => $this->configuration->base_url,
             RequestOptions::HEADERS => [
-                'Authorization' => $this->configuration->auth_token,
-                'Content-Type' => 'application/json',
+                'Authorization' => $this->configuration->client_secret,
             ],
             RequestOptions::HTTP_ERRORS => false,
             'handler' => $this->getGuzzleHandlerStack()
         ]);
     }
 
-    public function login(AccountIdentifierParams $params): LoginResult
+    public function login(LoginParams $params): LoginResult
     {
-        //throw unsupported exception
-        throw new \Exception('Login is not supported for Titan Email');
+        $partnerId = $this->configuration->client_id;
+        $titanOrderId = $params->serviceId;
+        $expirationTime = time() + 300; // Token valid for 5 minutes
+
+        // Generate JWT payload
+        $payload = [
+            'titanOrderId' => $titanOrderId,
+            'exp' => $expirationTime,
+        ];
+
+        // Generate JWT token
+        $jwt = JWT::encode($payload, $this->configuration->client_secret, 'HS256');
+
+        // Construct the Titan control panel URL
+        $url = $this->configuration->control_panel_url . 'partner/autoLogin?' . http_build_query([
+                'partnerId' => $partnerId,
+                'jwt' => $jwt,
+                'section' => $params->section ?? 'home',
+                'action' => $params->action ?? null,
+                'email' => $params->email ?? null,
+                'locale' => $params->locale ?? 'en-us'
+            ]);
+
+        // Return the login result
+        return LoginResult::create([
+            'url' => $url,
+        ]);
     }
 
     public function changePackage(ChangePackageParams $params): Result
     {
-        throw new \Exception('changePackage is not supported for Titan Email');
+        $serviceId = $params->serviceId;
+
+        // Map generic params to Titan-specific payload
+        $payload = [
+            'serviceId' => $serviceId,
+            'customerId' => $params->customerId,
+            'planType' => $params->plan,
+            'expiryDate' => $params->expiryDate,
+            'domainName' => $params->domain,
+        ];
+
+        // Map optional fields
+        $optionalFields = [
+            'billingCycle' => 'billingCycle',
+            'noOfAccounts' => 'noOfAccounts',
+            'action' => 'action',
+            'source' => 'source',
+            'sourceContext' => 'sourceContext',
+        ];
+
+        foreach ($optionalFields as $generic => $titan) {
+            if (isset($params->$generic)) {
+                $payload[$titan] = $params->$generic;
+            }
+        }
+
+        // Map billing fields
+        if (isset($params->billing)) {
+            $billingMap = [
+                'transactionId' => 'paymentTxnId',
+                'amount' => 'chargedAmount',
+                'currency' => 'currency',
+                'discount' => 'discountAmount',
+                'tax' => 'taxAmount',
+                'cycle' => 'billingCycle',
+            ];
+
+            foreach ($billingMap as $generic => $titan) {
+                if (isset($params->billing[$generic])) {
+                    $payload[$titan] = $params->billing[$generic];
+                }
+            }
+        }
+
+        // Map metadata
+        if (isset($params->metadata)) {
+            $payload['metadata'] = $params->metadata;
+        }
+
+        try {
+            $response = $this->client()->post('partner/modifyMailOrder', [
+                RequestOptions::JSON => $payload,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $this->errorResult('Failed to modify Titan email account', [
+                    'statusCode' => $statusCode,
+                    'response' => (string)$response->getBody(),
+                ]);
+            }
+            $responseData = json_decode($response->getBody()->getContents(), true);
+
+            // Map Titan response to generic Result
+            $resultData = [
+                'requestId' => $responseData['reqID'] ?? null,
+                'serviceId' => (string)($responseData['titanOrderId'] ?? $serviceId),
+                'status' => $responseData['status'] ?? 'unknown',
+                'message' => $responseData['message'] ?? 'Package modified successfully',
+            ];
+
+            return Result::create($resultData);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $this->errorResult('Failed to modify Titan email account', [
+                'error' => $e->getMessage(),
+                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null
+            ]);
+        }
     }
 
     public function suspend(ServiceIdentifierParams $params): Result
     {
-        throw new \Exception('suspend is not supported for Titan Email');
+        // Map generic params to Titan-specific payload
+        $payload = [
+            'titanOrderId' => $params->serviceId,
+            'suspensionType' => $params->reason,
+            'note' => $params->note,
+        ];
+
+        try {
+            // Send the request to the Titan API
+            $response = $this->client()->post('partner/suspendMailOrder', [
+                RequestOptions::JSON => $payload,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $this->errorResult('Failed to suspend Titan email account', [
+                    'statusCode' => $statusCode,
+                    'response' => (string)$response->getBody(),
+                ]);
+            }
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+
+            // Map Titan response to generic Result
+            return Result::create([
+                'requestId' => $responseData['reqID'] ?? null,
+            ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $this->errorResult('Failed to suspend Titan email account', [
+                'error' => $e->getMessage(),
+                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null,
+            ]);
+        }
     }
 
-    public function unsuspend(ServiceIdentifierParams $params): Result
+    public function unsuspend(ServiceIdentifierParams $params): UnsuspendResult
     {
-        throw new \Exception('unsuspend is not supported for Titan Email');
+        // Map generic params to Titan-specific payload
+        $payload = [
+            'titanOrderId' => $params->serviceId,
+            'suspensionType' => $params->reason,
+            'note' => $params->note,
+        ];
+
+        try {
+            // Send the request to the Titan API
+            $response = $this->client()->post('partner/unsuspendMailOrder', [
+                RequestOptions::JSON => $payload,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $this->errorResult('Failed to unsuspend Titan email account', [
+                    'statusCode' => $statusCode,
+                    'response' => (string)$response->getBody(),
+                ]);
+            }
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+
+            // Map Titan response to generic Result
+            return UnsuspendResult::create([
+                'requestId' => $responseData['reqID'] ?? null,
+                'status' => $responseData['newStatus'] ?? null,
+                'extra' => ['remainingSuspensions' => $responseData['remainingSuspensions']]]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $this->errorResult('Failed to unsuspend Titan email account', [
+                'error' => $e->getMessage(),
+                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null,
+            ]);
+        }
     }
 
     public function terminate(ServiceIdentifierParams $params): Result
     {
-        throw new \Exception('terminate is not supported for Titan Email');
+        // Map generic params to Titan-specific payload
+        $payload = [
+            'titanOrderId' => $params->serviceId,
+            'reason' => $params->reason,
+        ];
+
+        try {
+            // Send the request to the Titan API
+            $response = $this->client()->post('partner/deleteMailOrder', [
+                RequestOptions::JSON => $payload,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $this->errorResult('Failed to terminate Titan email account', [
+                    'statusCode' => $statusCode,
+                    'response' => (string)$response->getBody(),
+                ]);
+            }
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+
+            // Map Titan response to generic Result
+            return Result::create([
+                'requestId' => $responseData['reqID'] ?? null,
+            ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $this->errorResult('Failed to terminate Titan email account', [
+                'error' => $e->getMessage(),
+                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null,
+            ]);
+        }
     }
 }

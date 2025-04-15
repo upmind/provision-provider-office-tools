@@ -10,12 +10,14 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
 /**
  * @property-read string $reqID Request ID
  */
-class LoginResult extends ResultData
+class UnsuspendResult extends ResultData
 {
     public static function rules(): Rules
     {
         return new Rules([
-            'url' => ['required', 'string'],
+            'requestId' => ['nullable', 'string'],
+            'status' => ['nullable', 'string'],
+            'extra' => ['nullable', 'array'],
         ]);
     }
 }
