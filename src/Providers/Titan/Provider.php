@@ -35,7 +35,7 @@ class Provider extends Category implements ProviderInterface
         return AboutData::create()
             ->setName('Titan Email')
             ->setDescription('Create and manage Titan Email accounts')
-            ->setLogoUrl('https://api.upmind.io/images/logos/provision/titan-logo.png');
+            ->setLogoUrl('https://api.upmind.io/images/logos/provision/titan-mail-logo.png');
     }
 
     public function create(CreateParams $params): CreateResult
