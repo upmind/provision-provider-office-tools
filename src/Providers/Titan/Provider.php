@@ -18,8 +18,7 @@ use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\Result;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\UnsuspendResult;
-use Upmind\ProvisionProviders\OfficeTools\Providers\Generic\Data\Configuration;
-
+use Upmind\ProvisionProviders\OfficeTools\Providers\Titan\Data\Configuration;
 
 class Provider extends Category implements ProviderInterface
 {
@@ -157,7 +156,7 @@ class Provider extends Category implements ProviderInterface
 
 
         return new Client([
-            'base_uri' => $this->configuration->base_url,
+            'base_uri' => $this->configuration->api_url,
             RequestOptions::HEADERS => [
                 'Authorization' => $this->configuration->client_secret,
             ],
