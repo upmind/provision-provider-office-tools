@@ -8,14 +8,14 @@ use Upmind\ProvisionBase\Provider\DataSet\ResultData;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
 
 /**
- * @property-read string $reqID Request ID
+ * @property-read string $request_id Request ID
  */
 class UnsuspendResult extends ResultData
 {
     public static function rules(): Rules
     {
         return new Rules([
-            'requestId' => ['nullable', 'string'],
+            'request_id' => ['nullable', 'string'],
             'status' => ['nullable', 'string'],
             'extra' => ['nullable', 'array'],
         ]);

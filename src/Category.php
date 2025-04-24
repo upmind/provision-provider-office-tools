@@ -8,10 +8,11 @@ use Upmind\ProvisionBase\Provider\BaseCategory;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
+use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
-use Upmind\ProvisionProviders\OfficeTools\Data\Result;
+use Upmind\ProvisionProviders\OfficeTools\Data\EmptyResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\UnsuspendResult;
 
@@ -44,12 +45,12 @@ abstract class Category extends BaseCategory
     /**
      * Change the package of a service.
      */
-    abstract public function changePackage(ChangePackageParams $params): Result;
+    abstract public function changePackage(ChangePackageParams $params): ChangePackageResult;
 
     /**
      * Suspend a service.
      */
-    abstract public function suspend(ServiceIdentifierParams $params): Result;
+    abstract public function suspend(ServiceIdentifierParams $params): EmptyResult;
 
     /**
      * Unsuspend a service.
@@ -59,5 +60,5 @@ abstract class Category extends BaseCategory
     /**
      * Permanently delete a service.
      */
-    abstract public function terminate(ServiceIdentifierParams $params): Result;
+    abstract public function terminate(ServiceIdentifierParams $params): EmptyResult;
 }

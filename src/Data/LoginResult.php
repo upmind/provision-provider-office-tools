@@ -8,7 +8,7 @@ use Upmind\ProvisionBase\Provider\DataSet\ResultData;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
 
 /**
- * @property-read string $reqID Request ID
+ * @property-read string $url Login URL for the service
  */
 class LoginResult extends ResultData
 {

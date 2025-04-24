@@ -11,11 +11,12 @@ use Upmind\ProvisionBase\Provider\Contract\ProviderInterface;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
 use Upmind\ProvisionProviders\OfficeTools\Category;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
+use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
-use Upmind\ProvisionProviders\OfficeTools\Data\Result;
+use Upmind\ProvisionProviders\OfficeTools\Data\EmptyResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\UnsuspendResult;
 use Upmind\ProvisionProviders\OfficeTools\Providers\Titan\Data\Configuration;
@@ -45,21 +46,20 @@ class Provider extends Category implements ProviderInterface
         // Map generic params to Titan-specific payload
         $payload = [
             'domainName' => $domain,
-            'customerId' => $params->customerId,
-            'customerEmailAddress' => $params->customerEmail,
+            'customerId' => $params->customer_id,
+            'customerEmailAddress' => $params->customer_email,
             'planType' => $params->plan,
-            'noOfAccounts' => $params->seatCount,
+            'noOfAccounts' => $params->seat_count,
 
         ];
         // Map optional fields
         $optionalFields = [
-            'customerName' => 'customerName',
-            'alternateEmail' => 'alternateEmailAddress',
+            'customer_name' => 'customerName',
+            'alternate_email' => 'alternateEmailAddress',
             'password' => 'password',
             'country' => 'customerCountry',
-            'expiryDate' => 'expiryDate',
-            'sendWelcomeEmail' => 'sendWelcomeEmail',
-            'primaryAccount' => 'firstEmailAccount',
+            'expiry_date' => 'expiryDate',
+            'send_welcome_email' => 'sendWelcomeEmail',
         ];
 
         foreach ($optionalFields as $generic => $titan) {
@@ -71,7 +71,7 @@ class Provider extends Category implements ProviderInterface
         // Map billing fields
         if (isset($params->billing)) {
             $billingMap = [
-                'transactionId' => 'paymentTxnId',
+                'transaction_id' => 'paymentTxnId',
                 'amount' => 'chargedAmount',
                 'currency' => 'currency',
                 'discount' => 'discountAmount',
@@ -86,19 +86,36 @@ class Provider extends Category implements ProviderInterface
             }
         }
 
+        // Map primary account fields
+        if (isset($params->primary_account)) {
+            $primaryAccountMap = [
+                'email' => 'email',
+                'password' => 'password',
+                'name' => 'name',
+                'is_admin' => 'isAdmin',
+                'alternate_email' => 'alternateEmail',
+            ];
+
+            foreach ($primaryAccountMap as $generic => $titan) {
+                if (isset($params->primary_account[$generic])) {
+                    $payload['firstEmailAccount'][$titan] = $params->primary_account[$generic];
+                }
+            }
+        }
+
         // Map metadata
         if (isset($params->metadata)) {
             $metadataMap = [
                 'source' => 'source',
                 'locale' => 'locale',
-                'sourceContext' => 'sourceContext',
-                'associatedOrderExpiryDate' => 'associatedOrderExpiryDate',
-                'associatedOrderPlanType' => 'associatedOrderPlanType',
-                'cpanelHostName' => 'cpanelHostName',
-                'cpanelUserName' => 'cpanelUserName',
-                'partnerBrand' => 'partnerBrand',
-                'paymentMethod' => 'paymentMethod',
-                'autoRenew' => 'autoRenew',
+                'source_context' => 'sourceContext',
+                'associated_order_expiry_date' => 'associatedOrderExpiryDate',
+                'associated_order_plan_type' => 'associatedOrderPlanType',
+                'cpanel_host_name' => 'cpanelHostName',
+                'cpanel_user_name' => 'cpanelUserName',
+                'partner_brand' => 'partnerBrand',
+                'payment_method' => 'paymentMethod',
+                'auto_renew' => 'autoRenew',
             ];
 
             $payload['metadata'] = [];
@@ -125,20 +142,20 @@ class Provider extends Category implements ProviderInterface
 
             // Map Titan response to generic CreateResult
             $resultData = [
-                'requestId' => $responseData['reqID'],
-                'serviceId' => (string)$responseData['titanOrderId'], // Convert to string for generality
+                'request_id' => $responseData['reqID'],
+                'service_id' => (string)$responseData['titanOrderId'], // Convert to string for generality
                 'status' => $responseData['status'],
-                'username' => $params->customerEmail,
-                'serviceIdentifier' => $domain,
-                'packageIdentifier' => $params->plan,
+                'username' => $params->customer_email,
+                'service_identifier' => $domain,
+                'package_identifier' => $params->plan,
                 'message' => 'Titan email account created successfully',
             ];
 
             if (isset($responseData['firstEmailAccountDetails'])) {
-                $resultData['primaryAccount'] = [
-                    'email' => $params->primaryAccount['email'] ?? null,
-                    'loginToken' => $responseData['firstEmailAccountDetails']['webmailAutoLoginToken'] ?? null,
-                    'isAdmin' => $params->primaryAccount['isAdmin'] ?? true,
+                $resultData['primary_account'] = [
+                    'email' => $params->primary_account['email'] ?? null,
+                    'login_token' => $responseData['firstEmailAccountDetails']['webmailAutoLoginToken'] ?? null,
+                    'is_admin' => $params->primary_account['is_admin'] ?? true,
                 ];
             }
 
@@ -168,7 +185,7 @@ class Provider extends Category implements ProviderInterface
     public function login(LoginParams $params): LoginResult
     {
         $partnerId = $this->configuration->client_id;
-        $titanOrderId = $params->serviceId;
+        $titanOrderId = $params->service_id;
         $expirationTime = time() + 300; // Token valid for 5 minutes
 
         // Generate JWT payload
@@ -196,26 +213,26 @@ class Provider extends Category implements ProviderInterface
         ]);
     }
 
-    public function changePackage(ChangePackageParams $params): Result
+    public function changePackage(ChangePackageParams $params): ChangePackageResult
     {
-        $serviceId = $params->serviceId;
+        $serviceId = $params->service_id;
 
         // Map generic params to Titan-specific payload
         $payload = [
             'serviceId' => $serviceId,
-            'customerId' => $params->customerId,
+            'customerId' => $params->customer_id,
             'planType' => $params->plan,
-            'expiryDate' => $params->expiryDate,
+            'expiryDate' => $params->expiry_date,
             'domainName' => $params->domain,
         ];
 
         // Map optional fields
         $optionalFields = [
-            'billingCycle' => 'billingCycle',
-            'noOfAccounts' => 'noOfAccounts',
+            'billing_cycle' => 'billingCycle',
+            'num_seats' => 'noOfAccounts',
             'action' => 'action',
             'source' => 'source',
-            'sourceContext' => 'sourceContext',
+            'source_context' => 'sourceContext',
         ];
 
         foreach ($optionalFields as $generic => $titan) {
@@ -227,7 +244,7 @@ class Provider extends Category implements ProviderInterface
         // Map billing fields
         if (isset($params->billing)) {
             $billingMap = [
-                'transactionId' => 'paymentTxnId',
+                'transaction_id' => 'paymentTxnId',
                 'amount' => 'chargedAmount',
                 'currency' => 'currency',
                 'discount' => 'discountAmount',
@@ -263,13 +280,13 @@ class Provider extends Category implements ProviderInterface
 
             // Map Titan response to generic Result
             $resultData = [
-                'requestId' => $responseData['reqID'] ?? null,
-                'serviceId' => (string)($responseData['titanOrderId'] ?? $serviceId),
+                'request_id' => $responseData['reqID'] ?? null,
+                'service_id' => (string)($responseData['titanOrderId'] ?? $serviceId),
                 'status' => $responseData['status'] ?? 'unknown',
-                'message' => $responseData['message'] ?? 'Package modified successfully',
             ];
 
-            return Result::create($resultData);
+            return ChangePackageResult::create($resultData)
+                ->setMessage($responseData['message'] ?? 'Package modified successfully');
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $this->errorResult('Failed to modify Titan email account', [
                 'error' => $e->getMessage(),
@@ -278,11 +295,11 @@ class Provider extends Category implements ProviderInterface
         }
     }
 
-    public function suspend(ServiceIdentifierParams $params): Result
+    public function suspend(ServiceIdentifierParams $params): EmptyResult
     {
         // Map generic params to Titan-specific payload
         $payload = [
-            'titanOrderId' => $params->serviceId,
+            'titanOrderId' => $params->service_id,
             'suspensionType' => $params->reason,
             'note' => $params->note,
         ];
@@ -304,8 +321,8 @@ class Provider extends Category implements ProviderInterface
             $responseData = json_decode($response->getBody()->getContents(), true);
 
             // Map Titan response to generic Result
-            return Result::create([
-                'requestId' => $responseData['reqID'] ?? null,
+            return EmptyResult::create([
+                'request_id' => $responseData['reqID'] ?? null,
             ]);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $this->errorResult('Failed to suspend Titan email account', [
@@ -319,7 +336,7 @@ class Provider extends Category implements ProviderInterface
     {
         // Map generic params to Titan-specific payload
         $payload = [
-            'titanOrderId' => $params->serviceId,
+            'titanOrderId' => $params->service_id,
             'suspensionType' => $params->reason,
             'note' => $params->note,
         ];
@@ -342,7 +359,7 @@ class Provider extends Category implements ProviderInterface
 
             // Map Titan response to generic Result
             return UnsuspendResult::create([
-                'requestId' => $responseData['reqID'] ?? null,
+                'request_id' => $responseData['reqID'] ?? null,
                 'status' => $responseData['newStatus'] ?? null,
                 'extra' => ['remainingSuspensions' => $responseData['remainingSuspensions']]]);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
@@ -353,11 +370,11 @@ class Provider extends Category implements ProviderInterface
         }
     }
 
-    public function terminate(ServiceIdentifierParams $params): Result
+    public function terminate(ServiceIdentifierParams $params): EmptyResult
     {
         // Map generic params to Titan-specific payload
         $payload = [
-            'titanOrderId' => $params->serviceId,
+            'titanOrderId' => $params->service_id,
             'reason' => $params->reason,
         ];
 
@@ -378,8 +395,8 @@ class Provider extends Category implements ProviderInterface
             $responseData = json_decode($response->getBody()->getContents(), true);
 
             // Map Titan response to generic Result
-            return Result::create([
-                'requestId' => $responseData['reqID'] ?? null,
+            return EmptyResult::create([
+                'request_id' => $responseData['reqID'] ?? null,
             ]);
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $this->errorResult('Failed to terminate Titan email account', [
