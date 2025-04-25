@@ -11,11 +11,12 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * Billing metadata.
  *
  * @property-read string|null $transaction_id Unique transaction ID
- * @property-read string|float|null $amount Amount charged
- * @property-read string|null $currency Currency code (ISO 4217)
+ * @property-read string|float $amount Amount charged
+ * @property-read string $currency Currency code (ISO 4217)
  * @property-read string|float|null $discount Discount amount
  * @property-read string|float|null $tax Tax amount
- * @property-read string|null $cycle Billing cycle (monthly, quarterly, semesterly, yearly, biennial, quadrennial)
+ * @property-read int|null $billing_cycle_months Number of months in the billing cycle
+ * @property-read string $expiry_date Expiry date in YYYY-MM-DD format
  */
 class BillingParams extends DataSet
 {
@@ -23,11 +24,12 @@ class BillingParams extends DataSet
     {
         return new Rules([
             'transaction_id' => ['nullable', 'string'],
-            'amount' => ['nullable', 'numeric'],
-            'currency' => ['nullable', 'string'], // ISO 4217
+            'amount' => ['required', 'numeric'],
+            'currency' => ['required', 'string'], // ISO 4217
             'discount' => ['nullable', 'numeric'],
             'tax' => ['nullable', 'numeric',],
-            'cycle' => ['nullable', 'string', 'in:monthly,quarterly,semesterly,yearly,biennial,quadrennial'],
+            'billing_cycle_months' => ['nullable', 'integer'],
+            'expiry_date' => ['required', 'date:Y-m-d'],
         ]);
     }
 }

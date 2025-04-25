@@ -6,19 +6,22 @@ namespace Upmind\ProvisionProviders\OfficeTools\Providers\Titan;
 
 use Firebase\JWT\JWT;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\RequestOptions;
+use Throwable;
+use Upmind\ProvisionBase\Exception\ProvisionFunctionError;
 use Upmind\ProvisionBase\Provider\Contract\ProviderInterface;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
 use Upmind\ProvisionProviders\OfficeTools\Category;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
-use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
-use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\EmptyResult;
+use Upmind\ProvisionProviders\OfficeTools\Data\InfoResult;
+use Upmind\ProvisionProviders\OfficeTools\Data\RenewParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
-use Upmind\ProvisionProviders\OfficeTools\Data\UnsuspendResult;
 use Upmind\ProvisionProviders\OfficeTools\Providers\Titan\Data\Configuration;
 
 class Provider extends Category implements ProviderInterface
@@ -30,7 +33,6 @@ class Provider extends Category implements ProviderInterface
         $this->configuration = $configuration;
     }
 
-
     public static function aboutProvider(): AboutData
     {
         return AboutData::create()
@@ -39,147 +41,50 @@ class Provider extends Category implements ProviderInterface
             ->setLogoUrl('https://api.upmind.io/images/logos/provision/titan-mail-logo.png');
     }
 
-    public function create(CreateParams $params): CreateResult
+    public function create(CreateParams $params): InfoResult
     {
-        $domain = $params->domain;
-
         // Map generic params to Titan-specific payload
         $payload = [
-            'domainName' => $domain,
+            'domainName' => $params->domain,
             'customerId' => $params->customer_id,
+            'customerName' => $params->customer_name,
             'customerEmailAddress' => $params->customer_email,
+            'alternateEmailAddress' => $params->customer_email,
+            'customerCountry' => $params->country_code,
             'planType' => $params->plan,
             'noOfAccounts' => $params->seat_count,
-
-        ];
-        // Map optional fields
-        $optionalFields = [
-            'customer_name' => 'customerName',
-            'alternate_email' => 'alternateEmailAddress',
-            'password' => 'password',
-            'country' => 'customerCountry',
-            'expiry_date' => 'expiryDate',
-            'send_welcome_email' => 'sendWelcomeEmail',
+            'send_welcome_email' => boolval($this->configuration->send_welcome_email),
+            'chargedAmount' => $params->billing->amount,
+            'currency' => $params->billing->currency,
+            'expiryDate' => $params->billing->expiry_date,
         ];
 
-        foreach ($optionalFields as $generic => $titan) {
-            if (isset($params->$generic)) {
-                $payload[$titan] = $params->$generic;
-            }
+        // Map optional billing fields
+        $billing = $params->billing;
+
+        if ($billing->transaction_id) {
+            $payload['paymentTxnId'] = $billing->transaction_id;
+        }
+        if ($billing->discount) {
+            $payload['discountAmount'] = $billing->discount;
+        }
+        if ($billing->tax) {
+            $payload['taxAmount'] = $billing->tax;
         }
 
-        // Map billing fields
-        if (isset($params->billing)) {
-            $billingMap = [
-                'transaction_id' => 'paymentTxnId',
-                'amount' => 'chargedAmount',
-                'currency' => 'currency',
-                'discount' => 'discountAmount',
-                'tax' => 'taxAmount',
-                'cycle' => 'billingCycle',
-            ];
-
-            foreach ($billingMap as $generic => $titan) {
-                if (isset($params->billing[$generic])) {
-                    $payload[$titan] = $params->billing[$generic];
-                }
-            }
+        if ($cycle = $this->billingCycleMonthsToCycle($billing->billing_cycle_months)) {
+            $payload['billingCycle'] = $cycle;
         }
 
-        // Map primary account fields
-        if (isset($params->primary_account)) {
-            $primaryAccountMap = [
-                'email' => 'email',
-                'password' => 'password',
-                'name' => 'name',
-                'is_admin' => 'isAdmin',
-                'alternate_email' => 'alternateEmail',
-            ];
+        $responseData = $this->apiRequest('POST', 'partner/createMailOrder', $payload);
 
-            foreach ($primaryAccountMap as $generic => $titan) {
-                if (isset($params->primary_account[$generic])) {
-                    $payload['firstEmailAccount'][$titan] = $params->primary_account[$generic];
-                }
-            }
-        }
-
-        // Map metadata
-        if (isset($params->metadata)) {
-            $metadataMap = [
-                'source' => 'source',
-                'locale' => 'locale',
-                'source_context' => 'sourceContext',
-                'associated_order_expiry_date' => 'associatedOrderExpiryDate',
-                'associated_order_plan_type' => 'associatedOrderPlanType',
-                'cpanel_host_name' => 'cpanelHostName',
-                'cpanel_user_name' => 'cpanelUserName',
-                'partner_brand' => 'partnerBrand',
-                'payment_method' => 'paymentMethod',
-                'auto_renew' => 'autoRenew',
-            ];
-
-            $payload['metadata'] = [];
-            foreach ($metadataMap as $generic => $titan) {
-                if (isset($params->metadata[$generic])) {
-                    $payload['metadata'][$titan] = $params->metadata[$generic];
-                }
-            }
-        }
-
-        try {
-            $response = $this->client()->post('partner/createMailOrder', [
-                RequestOptions::JSON => $payload,
-            ]);
-
-            $statusCode = $response->getStatusCode();
-            if ($statusCode < 200 || $statusCode >= 300) {
-                $this->errorResult('Failed to create Titan email account', [
-                    'statusCode' => $statusCode,
-                    'response' => (string)$response->getBody(),
-                ]);
-            }
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            // Map Titan response to generic CreateResult
-            $resultData = [
-                'request_id' => $responseData['reqID'],
-                'service_id' => (string)$responseData['titanOrderId'], // Convert to string for generality
-                'status' => $responseData['status'],
-                'username' => $params->customer_email,
-                'service_identifier' => $domain,
-                'package_identifier' => $params->plan,
-                'message' => 'Titan email account created successfully',
-            ];
-
-            if (isset($responseData['firstEmailAccountDetails'])) {
-                $resultData['primary_account'] = [
-                    'email' => $params->primary_account['email'] ?? null,
-                    'login_token' => $responseData['firstEmailAccountDetails']['webmailAutoLoginToken'] ?? null,
-                    'is_admin' => $params->primary_account['is_admin'] ?? true,
-                ];
-            }
-
-            return CreateResult::create($resultData);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            $this->errorResult('Failed to create Titan email account', [
-                'error' => $e->getMessage(),
-                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null
-            ]);
-        }
+        return $this->getInfoResult($params->customer_id, (string)$responseData['titanOrderId'])
+            ->setMessage('Titan email account created successfully');
     }
 
-    protected function client(): Client
+    public function getInfo(ServiceIdentifierParams $params): InfoResult
     {
-
-
-        return new Client([
-            'base_uri' => $this->configuration->api_url,
-            RequestOptions::HEADERS => [
-                'Authorization' => $this->configuration->client_secret,
-            ],
-            RequestOptions::HTTP_ERRORS => false,
-            'handler' => $this->getGuzzleHandlerStack()
-        ]);
+        return $this->getInfoResult($params->customer_id, $params->service_id);
     }
 
     public function login(LoginParams $params): LoginResult
@@ -198,14 +103,12 @@ class Provider extends Category implements ProviderInterface
         $jwt = JWT::encode($payload, $this->configuration->client_secret, 'HS256');
 
         // Construct the Titan control panel URL
-        $url = $this->configuration->control_panel_url . 'partner/autoLogin?' . http_build_query([
-                'partnerId' => $partnerId,
-                'jwt' => $jwt,
-                'section' => $params->section ?? 'home',
-                'action' => $params->action ?? null,
-                'email' => $params->email ?? null,
-                'locale' => $params->locale ?? 'en-us'
-            ]);
+        $url = rtrim($this->configuration->control_panel_url, '/') . '/partner/autoLogin?' . http_build_query([
+            'partnerId' => $partnerId,
+            'jwt' => $jwt,
+            'section' => $this->configuration->login_section ?? 'home',
+            'locale' => $params->locale ?? 'en-us',
+        ]);
 
         // Return the login result
         return LoginResult::create([
@@ -213,161 +116,76 @@ class Provider extends Category implements ProviderInterface
         ]);
     }
 
-    public function changePackage(ChangePackageParams $params): ChangePackageResult
+    public function renew(RenewParams $params): InfoResult
     {
-        $serviceId = $params->service_id;
-
         // Map generic params to Titan-specific payload
         $payload = [
-            'serviceId' => $serviceId,
+            'serviceId' => $params->service_id,
             'customerId' => $params->customer_id,
-            'planType' => $params->plan,
-            'expiryDate' => $params->expiry_date,
             'domainName' => $params->domain,
+            'chargedAmount' => $params->billing->amount,
+            'currency' => $params->billing->currency,
+            'expiryDate' => $params->billing->expiry_date,
         ];
 
-        // Map optional fields
-        $optionalFields = [
-            'billing_cycle' => 'billingCycle',
-            'num_seats' => 'noOfAccounts',
-            'action' => 'action',
-            'source' => 'source',
-            'source_context' => 'sourceContext',
-        ];
-
-        foreach ($optionalFields as $generic => $titan) {
-            if (isset($params->$generic)) {
-                $payload[$titan] = $params->$generic;
-            }
+        if ($cycle = $this->billingCycleMonthsToCycle($params->billing->billing_cycle_months)) {
+            $payload['billingCycle'] = $cycle;
         }
 
-        // Map billing fields
-        if (isset($params->billing)) {
-            $billingMap = [
-                'transaction_id' => 'paymentTxnId',
-                'amount' => 'chargedAmount',
-                'currency' => 'currency',
-                'discount' => 'discountAmount',
-                'tax' => 'taxAmount',
-                'cycle' => 'billingCycle',
-            ];
+        $this->apiRequest('POST', 'partner/modifyMailOrder', $payload);
 
-            foreach ($billingMap as $generic => $titan) {
-                if (isset($params->billing[$generic])) {
-                    $payload[$titan] = $params->billing[$generic];
-                }
-            }
-        }
-
-        // Map metadata
-        if (isset($params->metadata)) {
-            $payload['metadata'] = $params->metadata;
-        }
-
-        try {
-            $response = $this->client()->post('partner/modifyMailOrder', [
-                RequestOptions::JSON => $payload,
-            ]);
-
-            $statusCode = $response->getStatusCode();
-            if ($statusCode < 200 || $statusCode >= 300) {
-                $this->errorResult('Failed to modify Titan email account', [
-                    'statusCode' => $statusCode,
-                    'response' => (string)$response->getBody(),
-                ]);
-            }
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            // Map Titan response to generic Result
-            $resultData = [
-                'request_id' => $responseData['reqID'] ?? null,
-                'service_id' => (string)($responseData['titanOrderId'] ?? $serviceId),
-                'status' => $responseData['status'] ?? 'unknown',
-            ];
-
-            return ChangePackageResult::create($resultData)
-                ->setMessage($responseData['message'] ?? 'Package modified successfully');
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            $this->errorResult('Failed to modify Titan email account', [
-                'error' => $e->getMessage(),
-                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null
-            ]);
-        }
+        return $this->getInfoResult($params->customer_id, $params->service_id)
+            ->setMessage('Service updated successfully');
     }
 
-    public function suspend(ServiceIdentifierParams $params): EmptyResult
+    public function changePackage(ChangePackageParams $params): InfoResult
+    {
+        // Map generic params to Titan-specific payload
+        $payload = [
+            'serviceId' => $params->service_id,
+            'customerId' => $params->customer_id,
+            'domainName' => $params->domain,
+            'planType' => $params->plan,
+            'noOfAccounts' => $params->seat_count,
+            'chargedAmount' => $params->billing->amount,
+            'currency' => $params->billing->currency,
+            'expiryDate' => $params->billing->expiry_date,
+        ];
+
+        if ($cycle = $this->billingCycleMonthsToCycle($params->billing->billing_cycle_months)) {
+            $payload['billingCycle'] = $cycle;
+        }
+
+        $this->apiRequest('POST', 'partner/modifyMailOrder', $payload);
+
+        return $this->getInfoResult($params->customer_id, $params->service_id)
+            ->setMessage('Service updated successfully');
+    }
+
+    public function suspend(ServiceIdentifierParams $params): InfoResult
     {
         // Map generic params to Titan-specific payload
         $payload = [
             'titanOrderId' => $params->service_id,
-            'suspensionType' => $params->reason,
-            'note' => $params->note,
         ];
 
-        try {
-            // Send the request to the Titan API
-            $response = $this->client()->post('partner/suspendMailOrder', [
-                RequestOptions::JSON => $payload,
-            ]);
+        $this->apiRequest('POST', 'partner/suspendMailOrder', $payload);
 
-            $statusCode = $response->getStatusCode();
-            if ($statusCode < 200 || $statusCode >= 300) {
-                $this->errorResult('Failed to suspend Titan email account', [
-                    'statusCode' => $statusCode,
-                    'response' => (string)$response->getBody(),
-                ]);
-            }
-
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            // Map Titan response to generic Result
-            return EmptyResult::create([
-                'request_id' => $responseData['reqID'] ?? null,
-            ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            $this->errorResult('Failed to suspend Titan email account', [
-                'error' => $e->getMessage(),
-                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null,
-            ]);
-        }
+        return $this->getInfoResult($params->customer_id, $params->service_id)
+            ->setMessage('Service suspended successfully');
     }
 
-    public function unsuspend(ServiceIdentifierParams $params): UnsuspendResult
+    public function unsuspend(ServiceIdentifierParams $params): InfoResult
     {
         // Map generic params to Titan-specific payload
         $payload = [
             'titanOrderId' => $params->service_id,
-            'suspensionType' => $params->reason,
-            'note' => $params->note,
         ];
 
-        try {
-            // Send the request to the Titan API
-            $response = $this->client()->post('partner/unsuspendMailOrder', [
-                RequestOptions::JSON => $payload,
-            ]);
+        $this->apiRequest('POST', 'partner/unsuspendMailOrder', $payload);
 
-            $statusCode = $response->getStatusCode();
-            if ($statusCode < 200 || $statusCode >= 300) {
-                $this->errorResult('Failed to unsuspend Titan email account', [
-                    'statusCode' => $statusCode,
-                    'response' => (string)$response->getBody(),
-                ]);
-            }
-
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            // Map Titan response to generic Result
-            return UnsuspendResult::create([
-                'request_id' => $responseData['reqID'] ?? null,
-                'status' => $responseData['newStatus'] ?? null,
-                'extra' => ['remainingSuspensions' => $responseData['remainingSuspensions']]]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            $this->errorResult('Failed to unsuspend Titan email account', [
-                'error' => $e->getMessage(),
-                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null,
-            ]);
-        }
+        return $this->getInfoResult($params->customer_id, $params->service_id)
+            ->setMessage('Service unsuspended successfully');
     }
 
     public function terminate(ServiceIdentifierParams $params): EmptyResult
@@ -375,34 +193,202 @@ class Provider extends Category implements ProviderInterface
         // Map generic params to Titan-specific payload
         $payload = [
             'titanOrderId' => $params->service_id,
-            'reason' => $params->reason,
+        ];
+
+        $this->apiRequest('POST', 'partner/deleteMailOrder', $payload);
+
+        return EmptyResult::create()
+            ->setMessage('Service terminated');
+    }
+
+    protected function getInfoResult(string $customerId, string $serviceId): InfoResult
+    {
+        $payload = [
+            'customerId' => $customerId,
         ];
 
         try {
-            // Send the request to the Titan API
-            $response = $this->client()->post('partner/deleteMailOrder', [
-                RequestOptions::JSON => $payload,
-            ]);
+            $responseData = $this->apiRequest('GET', 'partner/listMailOrders', $payload);
+        } catch (ProvisionFunctionError $e) {
+            $errorCode = $e->getData()['response']['code'] ?? null;
 
-            $statusCode = $response->getStatusCode();
-            if ($statusCode < 200 || $statusCode >= 300) {
-                $this->errorResult('Failed to terminate Titan email account', [
-                    'statusCode' => $statusCode,
-                    'response' => (string)$response->getBody(),
+            if ($errorCode !== 'UserNotFound') {
+                throw $e;
+            }
+
+            // customer not found; try to determine correct customer id
+
+            $customerId = $this->findCustomerIdByServiceId($serviceId);
+
+            $payload = [
+                'customerId' => $customerId
+            ];
+
+            $responseData = $this->apiRequest('GET', 'partner/listMailOrders', $payload);
+        }
+
+        $order = null;
+
+        foreach ($responseData['orders'] as $orderData) {
+            if ((string)$orderData['titanOrderId'] === (string)$serviceId) {
+                $order = $orderData;
+            }
+        }
+
+        if ($order === null) {
+            $this->errorResult('Customer service not found', [
+                'customer_id' => $customerId,
+                'service_id' => $serviceId,
+            ]);
+        }
+
+        $resultData = [
+            'customer_id' => $customerId,
+            'service_id' => (string)$order['titanOrderId'],
+            'domain' => $order['domainName'],
+            'plan' => $order['planType'],
+            'status' => $order['status'],
+            'seat_count' => (int)$order['noOfAccounts'],
+            'seat_count_used' => (int)$order['noOfActiveAccounts'],
+            'expiry_date' => $order['expiryDate'] ?? null,
+        ];
+
+        return InfoResult::create($resultData);
+    }
+
+    /**
+     * Attempt to determine customer ID by listing email accounts for the given service id.
+     */
+    protected function findCustomerIdByServiceId(string $serviceId): string
+    {
+        $payload = [
+            'titanOrderId' => $serviceId,
+        ];
+
+        $responseData = $this->apiRequest('GET', 'partner/listEmailAccounts', $payload);
+
+        foreach ($responseData['accounts'] as $emailData) {
+            return (string)$emailData['customerId'];
+        }
+
+        $this->errorResult('Customer ID not found', [
+            'service_id' => $serviceId,
+        ]);
+    }
+
+    /**
+     * @param int|string|null $months
+     */
+    protected function billingCycleMonthsToCycle($months): ?string
+    {
+        switch ($months) {
+            case 1:
+                return 'monthly';
+            case 3:
+                return 'quarterly';
+            case 6:
+                return 'semesterly';
+            case 12:
+                return 'yearly';
+            case 24:
+                return 'biennial';
+            case 48:
+                return 'quadrennial';
+            default:
+                return null;
+        }
+    }
+
+    protected function client(): Client
+    {
+        return new Client([
+            'base_uri' => $this->configuration->api_url,
+            RequestOptions::HEADERS => [
+                'Authorization' => $this->configuration->client_secret,
+            ],
+            'handler' => $this->getGuzzleHandlerStack()
+        ]);
+    }
+
+    /**
+     * @throws ProvisionFunctionError
+     *
+     * @return array<string,mixed>
+     */
+    protected function apiRequest(string $method, string $uri, array $payload): array
+    {
+        $requestOptions = [];
+
+        switch (strtoupper($method)) {
+            case 'POST':
+            case 'PUT':
+            case 'PATCH':
+                $requestOptions = [
+                    RequestOptions::JSON => $payload,
+                ];
+                break;
+            default:
+                $requestOptions = [
+                    RequestOptions::QUERY => $payload,
+                ];
+                break;
+        }
+
+        try {
+            $response = $this->client()->request($method, $uri, $requestOptions);
+            $body = (string)$response->getBody()->getContents();
+            $data = json_decode($body, true);
+
+            if ($data === null) {
+                $this->errorResult('Unexpected Provider API Response', [
+                    'http_code' => $response->getStatusCode(),
+                    'response' => $body,
                 ]);
             }
 
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            // Map Titan response to generic Result
-            return EmptyResult::create([
-                'request_id' => $responseData['reqID'] ?? null,
-            ]);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            $this->errorResult('Failed to terminate Titan email account', [
-                'error' => $e->getMessage(),
-                'response' => $e->hasResponse() ? $e->getResponse()->getBody() : null,
-            ]);
+            return $data;
+        } catch (Throwable $e) {
+            $this->handleException($e);
         }
+    }
+
+    /**
+     * @throws ProvisionFunctionError
+     *
+     * @return no-return
+     */
+    protected function handleException(Throwable $e): void
+    {
+        if ($e instanceof TransferException) {
+            if ($e instanceof RequestException) {
+                if ($response = $e->getResponse()) {
+                    $statusCode = $response->getStatusCode();
+                    $body = (string)$response->getBody();
+                    $data = json_decode($body, true);
+
+                    $errorMessage = $response->getReasonPhrase();
+
+                    if (!empty($data['desc'])) {
+                        $errorMessage = $data['desc'];
+                    }
+
+                    if (!empty($data['attrs']['detail'])) {
+                        $errorMessage = $data['attrs']['detail'];
+                    }
+
+                    $this->errorResult(sprintf('Provider API Error: %s', $errorMessage), [
+                        'http_code' => $statusCode,
+                        'response' => $data ?? $body,
+                    ], [], $e);
+                }
+            }
+
+            $this->errorResult('Provider API Request Failed', [
+                'exception_type' => get_class($e),
+                'exception' => $e->getMessage(),
+            ], [], $e);
+        }
+
+        throw $e;
     }
 }
