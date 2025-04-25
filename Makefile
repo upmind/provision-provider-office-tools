@@ -15,6 +15,9 @@ help:
 	@echo "   make kill-containers       : Stop and remove all containers"
 	@echo "   make composer-install      : Install composer dependencies"
 
+# Typing 'make setup-php74' will start the dev environment with PHP 7.4
+setup-php74: stop-containers --prep-dockerfile-php74 start-containers --remove-packages composer-install
+
 # Typing 'make setup-php81' will start the dev environment with PHP 8.1
 setup-php81: stop-containers --prep-dockerfile-php81 start-containers --remove-packages composer-install
 
@@ -51,6 +54,10 @@ kill-containers:
 # Install composer dependencies
 composer-install:
 	docker compose exec provision-provider-office-tools composer install --no-interaction
+
+# Copy Dockerfile for PHP 7.4
+--prep-dockerfile-php74: --remove-dockerfile --prep-docker-compose-file
+	cp "./.docker/Dockerfile.php74" "./.docker/Dockerfile"
 
 # Copy Dockerfile for PHP 8.1
 --prep-dockerfile-php81: --remove-dockerfile --prep-docker-compose-file
