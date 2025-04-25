@@ -8,13 +8,13 @@ use Upmind\ProvisionBase\Provider\BaseCategory;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
+use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
-use Upmind\ProvisionProviders\OfficeTools\Data\Result;
+use Upmind\ProvisionProviders\OfficeTools\Data\EmptyResult;
 use Upmind\ProvisionProviders\OfficeTools\Data\ServiceIdentifierParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\UnsuspendResult;
-
 
 /**
  * This provision category contains functions to facilitate basic online service
@@ -26,13 +26,13 @@ abstract class Category extends BaseCategory
     {
         return AboutData::create()
             ->setName('Office Tools')
-            ->setDescription('Provision category which provides professional email services')
+            ->setDescription('Provision category for office tools such as hosted email')
             ->setIcon('envelope');
     }
 
     /**
-     * Creates an email service and returns the `username` which can be used to
-     * identify the email service in subsequent requests, plus other email service
+     * Creates a service and returns the `username` which can be used to
+     * identify the service in subsequent requests, plus other service
      * information.
      */
     abstract public function create(CreateParams $params): CreateResult;
@@ -43,22 +43,22 @@ abstract class Category extends BaseCategory
     abstract public function login(LoginParams $params): LoginResult;
 
     /**
-     * Change the package of an email service.
+     * Change the package of a service.
      */
-    abstract public function changePackage(ChangePackageParams $params): Result;
+    abstract public function changePackage(ChangePackageParams $params): ChangePackageResult;
 
     /**
-     * Suspend an email service.
+     * Suspend a service.
      */
-    abstract public function suspend(ServiceIdentifierParams $params): Result;
+    abstract public function suspend(ServiceIdentifierParams $params): EmptyResult;
 
     /**
-     * Unsuspend an email service.
+     * Unsuspend a service.
      */
     abstract public function unsuspend(ServiceIdentifierParams $params): UnsuspendResult;
 
     /**
-     * Permanently delete an email service.
+     * Permanently delete a service.
      */
-    abstract public function terminate(ServiceIdentifierParams $params): Result;
+    abstract public function terminate(ServiceIdentifierParams $params): EmptyResult;
 }

@@ -1,6 +1,6 @@
-# [Upmind Provision Providers](https://github.com/upmind-automation) - Pro Email
+# [Upmind Provision Providers](https://github.com/upmind-automation) - Office Tools
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/upmind/provision-provider-pro-email.svg?style=flat-square)](https://packagist.org/packages/upmind/provision-provider-pro-email)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/upmind/provision-provider-office-tools.svg?style=flat-square)](https://packagist.org/packages/upmind/provision-provider-office-tools)
 
 This provision category contains functions to facilitate basic online service account creation/management including an automatic login feature.
 
@@ -18,7 +18,7 @@ This provision category contains functions to facilitate basic online service ac
 ## Installation
 
 ```bash
-composer require upmind/provision-provider-pro-email
+composer require upmind/provision-provider-office-tools
 ```
 
 ## Usage
@@ -36,8 +36,7 @@ Alternatively you can start using it for your business immediately with [Upmind.
 ## Supported Providers
 
 The following providers are currently implemented:
-  - Generic (a generic highly configurable provider)
-  - [SpamExperts](https://api.antispamcloud.com/api/help.php)
+  - [TitanMail](https://titanapidocs.docs.apiary.io/#/introduction)
 
 ## Functions
 
@@ -61,8 +60,8 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Credits
 
+ - [Nicolás Ramírez](https://github.com/nicolasramirez)
  - [Harry Lewis](https://github.com/uphlewis)
- - [Roussetos Karafyllakis](https://github.com/RoussKS)
  - [All Contributors](../../contributors)
 
 ## License

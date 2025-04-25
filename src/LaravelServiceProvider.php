@@ -13,7 +13,6 @@ class LaravelServiceProvider extends ProvisionServiceProvider
     {
         $this->bindCategory('office-tools', Category::class);
 
-        $this->bindProvider('office-tools', 'titan', TitanProvider::class);
-
+        $this->bindProvider('office-tools', 'titan-mail', TitanProvider::class);
     }
 }

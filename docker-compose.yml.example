@@ -2,22 +2,22 @@ version: '3.3'
 services:
 
   #PHP Service
-  provision-provider-pro-email:
+  provision-provider-office-tools:
     build:
       context: .
       dockerfile: ./.docker/Dockerfile
-    container_name: provision-provider-pro-email
+    container_name: provision-provider-office-tools
     tty: true
     environment:
-      SERVICE_NAME: provision-provider-pro-email
+      SERVICE_NAME: provision-provider-office-tools
       SERVICE_TAGS: dev
     working_dir: /usr/src/lib
     volumes:
       - ./:/usr/src/lib
     networks:
-      - provision-provider-pro-email-network
+      - provision-provider-office-tools-network
 
 #Docker Networks
 networks:
-  provision-provider-pro-email-network:
+  provision-provider-office-tools-network:
     driver: bridge

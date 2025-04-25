@@ -8,14 +8,14 @@ use Upmind\ProvisionBase\Provider\DataSet\ResultData;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
 
 /**
- * @property-read string $reqID Request ID
+ * No result data necessary.
  */
-class Result extends ResultData
+class EmptyResult extends ResultData
 {
     public static function rules(): Rules
     {
         return new Rules([
-            'requestId' => ['nullable', 'string'],
+            //
         ]);
     }
 }

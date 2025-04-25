@@ -8,15 +8,16 @@ use Upmind\ProvisionBase\Provider\DataSet\DataSet;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
 
 /**
- * @property-read int $titanOrderId Unique Titan order ID
- * @property-read string|null $reason Reason for account deletion
+ * @property-read string $service_id Unique identifier for the service
+ * @property-read string|null $reason Reason for operation e.g., account deletion
+ * @property-read string|null $note Additional notes or comments
  */
 class ServiceIdentifierParams extends DataSet
 {
     public static function rules(): Rules
     {
         return new Rules([
-            'serviceId' => ['required', 'integer'],
+            'service_id' => ['required', 'string'],
             'reason' => ['required', 'string'],
             'note' => ['nullable', 'string'],
         ]);
