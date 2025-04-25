@@ -19,15 +19,15 @@ Links/resources to familiarize yourself with before you begin.
 Follow the below steps to create a new provider, using the fictitious provider "FooPlatform" as an example:
 
 1. Install the [Upmind Provision Workbench](https://github.com/upmind-automation/provision-workbench#readme)
-2. Fork [this repository](https://github.com/upmind-automation/provision-provider-pro-email)
-3. Clone your fork into the `local/` directory where you have installed the provision workbench and run `composer require upmind/provision-provider-pro-email:@dev` - it will install from your fork in local/
-4. In your fork of upmind/provision-provider-pro-email copy the `src/Providers/Example` directory to create `src/Providers/FooPlatform` and update the namespace on files under `src/Providers/FooPlatform`
+2. Fork [this repository](https://github.com/upmind-automation/provision-provider-office-tools)
+3. Clone your fork into the `local/` directory where you have installed the provision workbench and run `composer require upmind/provision-provider-office-tools:@dev` - it will install from your fork in local/
+4. In your fork of upmind/provision-provider-office-tools copy the `src/Providers/Example` directory to create `src/Providers/FooPlatform` and update the namespace on files under `src/Providers/FooPlatform`
 5. Update the sample Configuration class for FooPlatform API credentials (hostname, username, api_key, sandbox, debug etc)
 6. Bind your new provider to the provision registry in `src/LaravelServiceProvider.php`
 7. In the provision workbench terminal re-cache your local provision registry by running `php artisan upmind:provision:cache`
 8. In the provision workbench UI (typically http://127.0.0.1:9000) create a FooPlatform provision configuration
 9. Now you can run provision functions (also known as provision requests) via the workbench UI as you develop them
-10. When complete, submit your fork as a pull request (PR) back to the `main` branch on [this repository](https://github.com/upmind-automation/provision-provider-pro-email)
+10. When complete, submit your fork as a pull request (PR) back to the `main` branch on [this repository](https://github.com/upmind-automation/provision-provider-office-tools)
 
 ## Requirements
 

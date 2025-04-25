@@ -1,6 +1,6 @@
-# [Upmind Provision Providers](https://github.com/upmind-automation) - Pro Email
+# [Upmind Provision Providers](https://github.com/upmind-automation) - Office Tools
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/upmind/provision-provider-pro-email.svg?style=flat-square)](https://packagist.org/packages/upmind/provision-provider-pro-email)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/upmind/provision-provider-office-tools.svg?style=flat-square)](https://packagist.org/packages/upmind/provision-provider-office-tools)
 
 This provision category contains functions to facilitate basic online service account creation/management including an automatic login feature.
 
@@ -18,7 +18,7 @@ This provision category contains functions to facilitate basic online service ac
 ## Installation
 
 ```bash
-composer require upmind/provision-provider-pro-email
+composer require upmind/provision-provider-office-tools
 ```
 
 ## Usage
@@ -36,20 +36,20 @@ Alternatively you can start using it for your business immediately with [Upmind.
 ## Supported Providers
 
 The following providers are currently implemented:
-  - Generic (a generic highly configurable provider)
-  - [SpamExperts](https://api.antispamcloud.com/api/help.php)
+  - [TitanMail](https://titanapidocs.docs.apiary.io/#/introduction)
 
 ## Functions
 
 | Function | Parameters | Return Data | Description |
 |---|---|---|---|
-| login() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_LoginResult_](src/Data/LoginResult.php) | Obtain a signed login URL for the service that the system client can redirect to |
-| create() | [_CreateParams_](src/Data/CreateParams.php) | [_CreateResult_](src/Data/CreateResult.php) | Creates an account and returns the `username` which can be used to identify the account in subsequent requests, plus other account information |
-| suspend() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Suspend an account |
-| unsuspend() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Unsuspend an account |
-| changePackage() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Change the package of an account |
-| renew() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Renew an account's service |
-| terminate() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Permanently delete an account |
+| create() | [_CreateParams_](src/Data/CreateParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Creates a service and returns the `username` which can be used to identify the service in subsequent requests, plus other service information. |
+| getInfo() | [_ServiceIdentifierParams_](src/Data/ServiceIdentifierParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Gets info about the service such as plan, status, num_seats etc. |
+| login() | [_LoginParams_](src/Data/LoginParams.php) | [_LoginResult_](src/Data/LoginResult.php) | Obtain a signed login URL for the service that the system client can redirect to. |
+| renew() | [_RenewParams_](src/Data/RenewParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Renew the service. |
+| changePackage() | [_ChangePackageParams_](src/Data/ChangePackageParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Change the package of a service. |
+| suspend() | [_ServiceIdentifierParams_](src/Data/ServiceIdentifierParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Suspend a service. |
+| unsuspend() | [_ServiceIdentifierParams_](src/Data/ServiceIdentifierParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Unsuspend a service. |
+| terminate() | [_ServiceIdentifierParams_](src/Data/ServiceIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Permanently delete a service. |
 
 ## Changelog
 
@@ -61,8 +61,8 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Credits
 
+ - [Nicolás Ramírez](https://github.com/nicolasramirez)
  - [Harry Lewis](https://github.com/uphlewis)
- - [Roussetos Karafyllakis](https://github.com/RoussKS)
  - [All Contributors](../../contributors)
 
 ## License
