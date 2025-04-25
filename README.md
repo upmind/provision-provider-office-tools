@@ -1,4 +1,4 @@
-# [Upmind Provision Providers](https://github.com/upmind-automation) - Office Tools
+# [Upmind Provision Providers](https://github.com/upmind) - Office Tools
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/upmind/provision-provider-office-tools.svg?style=flat-square)](https://packagist.org/packages/upmind/provision-provider-office-tools)
 
@@ -27,7 +27,7 @@ This library makes use of [upmind/provision-provider-base](https://packagist.org
 
 ### Quick-start
 
-The easiest way to see this provision category in action and to develop/test changes is to install it in [upmind/provision-workbench](https://github.com/upmind-automation/provision-workbench#readme).
+The easiest way to see this provision category in action and to develop/test changes is to install it in [upmind/provision-workbench](https://github.com/upmind/provision-workbench#readme).
 
 Alternatively you can start using it for your business immediately with [Upmind.com](https://upmind.com/start) - the ultimate web hosting billing and management solution.
 
