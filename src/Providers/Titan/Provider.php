@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Upmind\ProvisionProviders\OfficeTools\Providers\Titan;
 
+use Carbon\Carbon;
 use Firebase\JWT\JWT;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -56,7 +57,8 @@ class Provider extends Category implements ProviderInterface
             'send_welcome_email' => boolval($this->configuration->send_welcome_email),
             'chargedAmount' => $params->billing->amount,
             'currency' => $params->billing->currency,
-            'expiryDate' => $params->billing->expiry_date,
+            'expiryDate' => $params->billing->expiry_date
+                ?? Carbon::now()->addMonths($params->billing->billing_cycle_months)->format('Y-m-d'),
         ];
 
         // Map optional billing fields
@@ -125,7 +127,8 @@ class Provider extends Category implements ProviderInterface
             'domainName' => $params->domain,
             'chargedAmount' => $params->billing->amount,
             'currency' => $params->billing->currency,
-            'expiryDate' => $params->billing->expiry_date,
+            'expiryDate' => $params->billing->expiry_date
+                ?? Carbon::now()->addMonths($params->billing->billing_cycle_months)->format('Y-m-d'),
         ];
 
         if ($cycle = $this->billingCycleMonthsToCycle($params->billing->billing_cycle_months)) {
@@ -149,7 +152,8 @@ class Provider extends Category implements ProviderInterface
             'noOfAccounts' => $params->seat_count,
             'chargedAmount' => $params->billing->amount,
             'currency' => $params->billing->currency,
-            'expiryDate' => $params->billing->expiry_date,
+            'expiryDate' => $params->billing->expiry_date
+                ?? Carbon::now()->addMonths($params->billing->billing_cycle_months)->format('Y-m-d'),
         ];
 
         if ($cycle = $this->billingCycleMonthsToCycle($params->billing->billing_cycle_months)) {

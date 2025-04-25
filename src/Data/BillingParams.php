@@ -16,7 +16,7 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * @property-read string|float|null $discount Discount amount
  * @property-read string|float|null $tax Tax amount
  * @property-read int|null $billing_cycle_months Number of months in the billing cycle
- * @property-read string $expiry_date Expiry date in YYYY-MM-DD format
+ * @property-read string|null $expiry_date Expiry date in YYYY-MM-DD format
  */
 class BillingParams extends DataSet
 {
@@ -29,7 +29,7 @@ class BillingParams extends DataSet
             'discount' => ['nullable', 'numeric'],
             'tax' => ['nullable', 'numeric',],
             'billing_cycle_months' => ['nullable', 'integer'],
-            'expiry_date' => ['required', 'date:Y-m-d'],
+            'expiry_date' => ['nullable', 'date:Y-m-d'],
         ]);
     }
 }
