@@ -14,7 +14,7 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * @property-read string $plan Plan name
  * @property-read BillingParams $billing Billing metadata
  * @property-read int $seat_count Number of seats
- * @property-read array|null $extra Additional parameters
+ * @property-read array|null $metadata Additional metadata
  */
 class ChangePackageParams extends DataSet
 {
@@ -27,7 +27,7 @@ class ChangePackageParams extends DataSet
             'plan' => ['required', 'string'],
             'billing' => ['required', BillingParams::class],
             'seat_count' => ['required', 'integer'],
-            'extra' => ['nullable', 'array'],
+            'metadata' => ['nullable', 'array'],
         ]);
     }
 }

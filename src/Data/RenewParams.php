@@ -12,7 +12,7 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * @property-read string $customer_id Customer ID
  * @property-read string $domain Domain name
  * @property-read BillingParams $billing Billing metadata
- * @property-read array|null $extra Additional parameters
+ * @property-read array|null $metadata Additional metadata
  */
 class RenewParams extends DataSet
 {
@@ -23,7 +23,7 @@ class RenewParams extends DataSet
             'customer_id' => ['required', 'string'],
             'domain' => ['required', 'string'],
             'billing' => ['required', BillingParams::class],
-            'extra' => ['nullable', 'array'],
+            'metadata' => ['nullable', 'array'],
         ]);
     }
 }

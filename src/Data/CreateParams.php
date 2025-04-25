@@ -18,7 +18,7 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * @property-read string|null $customer_name Customer's name
  * @property-read string|null $country_code Country code (ISO 3166-1 alpha-2)
  * @property-read BillingParams $billing Billing metadata
- * @property-read array|null $metadata Additional metadata for the service
+ * @property-read array|null $metadata Additional metadata
  */
 class CreateParams extends DataSet
 {
