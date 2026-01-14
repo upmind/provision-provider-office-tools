@@ -122,6 +122,7 @@ class Provider extends Category implements ProviderInterface
     {
         // Map generic params to Titan-specific payload
         $payload = [
+            'action' => 'renewOrder',
             'serviceId' => $params->service_id,
             'customerId' => $params->customer_id,
             'domainName' => $params->domain,
@@ -145,6 +146,7 @@ class Provider extends Category implements ProviderInterface
     {
         // Map generic params to Titan-specific payload
         $payload = [
+            'action' => 'upgradeOrder',
             'serviceId' => $params->service_id,
             'customerId' => $params->customer_id,
             'domainName' => $params->domain,
