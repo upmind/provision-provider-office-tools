@@ -11,6 +11,7 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * Billing metadata.
  *
  * @property-read string|null $transaction_id Unique transaction ID
+ * @property-read string|null $invoice_number Order invoice number
  * @property-read string|float $amount Amount charged
  * @property-read string $currency Currency code (ISO 4217)
  * @property-read string|float|null $discount Discount amount
@@ -24,6 +25,7 @@ class BillingParams extends DataSet
     {
         return new Rules([
             'transaction_id' => ['nullable', 'string'],
+            'invoice_number' => ['nullable', 'string'],
             'amount' => ['required', 'numeric'],
             'currency' => ['required', 'string'], // ISO 4217
             'discount' => ['nullable', 'numeric'],

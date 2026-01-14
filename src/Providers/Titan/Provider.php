@@ -78,6 +78,10 @@ class Provider extends Category implements ProviderInterface
             $payload['billingCycle'] = $cycle;
         }
 
+        if ($billing->invoice_number) {
+            $payload['orderId'] = $billing->invoice_number;
+        }
+
         $responseData = $this->apiRequest('POST', 'partner/createMailOrder', $payload);
 
         return $this->getInfoResult($params->customer_id, (string)$responseData['titanOrderId'])
