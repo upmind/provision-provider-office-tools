@@ -44,7 +44,7 @@ The following providers are currently implemented:
 |---|---|---|---|
 | create() | [_CreateParams_](src/Data/CreateParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Creates a service and returns the `username` which can be used to identify the service in subsequent requests, plus other service information. |
 | getInfo() | [_ServiceIdentifierParams_](src/Data/ServiceIdentifierParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Gets info about the service such as plan, status, num_seats etc. |
-| login() | [_LoginParams_](src/Data/LoginParams.php) | [_LoginResult_](src/Data/LoginResult.php) | Obtain a signed login URL for the service that the system client can redirect to. |
+| login() | [_LoginParams_](src/Data/LoginParams.php) | [_LoginResult_](src/Data/LoginResult.php) | * Obtain login data for the service, returned as either a signed redirect URL or an authentication token. |
 | renew() | [_RenewParams_](src/Data/RenewParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Renew the service. |
 | changePackage() | [_ChangePackageParams_](src/Data/ChangePackageParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Change the package of a service. |
 | suspend() | [_ServiceIdentifierParams_](src/Data/ServiceIdentifierParams.php) | [_InfoResult_](src/Data/InfoResult.php) | Suspend a service. |

@@ -95,31 +95,17 @@ class Provider extends Category implements ProviderInterface
 
     public function login(LoginParams $params): LoginResult
     {
-        $partnerId = $this->configuration->client_id;
-        $titanOrderId = $params->service_id;
-        $expirationTime = time() + 300; // Token valid for 5 minutes
-
-        // Generate JWT payload
         $payload = [
-            'titanOrderId' => $titanOrderId,
-            'exp' => $expirationTime,
+            'customerId' => $params->customer_id,
+            'validityInMinutes' => 5 // Token valid for 5 minutes
         ];
 
-        // Generate JWT token
-        $jwt = JWT::encode($payload, $this->configuration->client_secret, 'HS256');
-
-        // Construct the Titan control panel URL
-        $url = rtrim($this->configuration->control_panel_url, '/') . '/partner/autoLogin?' . http_build_query([
-            'partnerId' => $partnerId,
-            'jwt' => $jwt,
-            'section' => $this->configuration->login_section ?? 'home',
-            'locale' => $params->locale ?? 'en-us',
-        ]);
+        $responseData = $this->apiRequest('POST', 'partner/generateCPToken', $payload);
 
         // Return the login result
-        return LoginResult::create([
-            'url' => $url,
-        ]);
+        return LoginResult::create()
+            ->setType(LoginResult::TYPE_TOKEN)
+            ->setToken($responseData['token']);
     }
 
     public function renew(RenewParams $params): InfoResult

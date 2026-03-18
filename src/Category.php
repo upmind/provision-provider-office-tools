@@ -42,7 +42,8 @@ abstract class Category extends BaseCategory
     abstract public function getInfo(ServiceIdentifierParams $params): InfoResult;
 
     /**
-     * Obtain a signed login URL for the service that the system client can redirect to.
+     * Obtain login data for the service, returned as either a signed redirect URL
+     * or an authentication token.
      */
     abstract public function login(LoginParams $params): LoginResult;
 
