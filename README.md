@@ -63,6 +63,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
  - [Nicolás Ramírez](https://github.com/nicolasramirez)
  - [Harry Lewis](https://github.com/uphlewis)
+ - [Eric Iversen](https://github.com/Iversion)
  - [All Contributors](../../contributors)
 
 ## License
