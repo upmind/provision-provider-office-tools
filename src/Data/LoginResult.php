@@ -9,7 +9,7 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
 
 /**
  * @property-read string $type Login type for the service
- * @property-read string|null $redirect_url Login Redirect URL
+ * @property-read string|null $url Login Redirect URL
  * @property-read string|null $token Control Panel Token
  */
 class LoginResult extends ResultData
@@ -37,7 +37,7 @@ class LoginResult extends ResultData
     {
         return new Rules([
             'type' => ['required', 'in:' . implode(',', self::VALID_TYPES)],
-            'redirect_url' => [
+            'url' => [
                 'required_if:type,' . self::TYPE_REDIRECT,
                 'nullable',
                 'url',
@@ -63,9 +63,9 @@ class LoginResult extends ResultData
     /**
      * @return self $this
      */
-    public function setRedirectUrl(?string $url): self
+    public function setUrl(?string $url): self
     {
-        $this->setValue('redirect_url', $url);
+        $this->setValue('url', $url);
 
         return $this;
     }

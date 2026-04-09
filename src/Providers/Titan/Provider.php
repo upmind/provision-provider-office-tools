@@ -95,17 +95,46 @@ class Provider extends Category implements ProviderInterface
 
     public function login(LoginParams $params): LoginResult
     {
+        if ($this->configuration->login_result_type === LoginResult::TYPE_TOKEN) {
+            $payload = [
+                'customerId' => $params->customer_id,
+                'validityInMinutes' => 30 // Token valid for 30 minutes
+            ];
+
+            $responseData = $this->apiRequest('POST', 'partner/generateCPToken', $payload);
+
+            // Return the login result
+            return LoginResult::create()
+                ->setType(LoginResult::TYPE_TOKEN)
+                ->setToken($responseData['token']);
+        }
+
+        // default to redirect URL
+        $partnerId = $this->configuration->client_id;
+        $titanOrderId = $params->service_id;
+        $expirationTime = time() + 300; // Token valid for 5 minutes
+
+        // Generate JWT payload
         $payload = [
-            'customerId' => $params->customer_id,
-            'validityInMinutes' => 5 // Token valid for 5 minutes
+            'titanOrderId' => $titanOrderId,
+            'exp' => $expirationTime,
         ];
 
-        $responseData = $this->apiRequest('POST', 'partner/generateCPToken', $payload);
+        // Generate JWT token
+        $jwt = JWT::encode($payload, $this->configuration->client_secret, 'HS256');
+
+        // Construct the Titan control panel URL
+        $url = rtrim($this->configuration->control_panel_url, '/') . '/partner/autoLogin?' . http_build_query([
+            'partnerId' => $partnerId,
+            'jwt' => $jwt,
+            'section' => $this->configuration->login_section ?? 'home',
+            'locale' => $params->locale ?? 'en-us',
+        ]);
 
         // Return the login result
         return LoginResult::create()
-            ->setType(LoginResult::TYPE_TOKEN)
-            ->setToken($responseData['token']);
+            ->setType(LoginResult::TYPE_REDIRECT)
+            ->setUrl($url);
     }
 
     public function renew(RenewParams $params): InfoResult
