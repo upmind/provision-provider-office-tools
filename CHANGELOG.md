@@ -2,6 +2,11 @@
 
 All notable changes to the package will be documented in this file.
 
+## [v1.1.0](https://github.com/upmind/provision-provider-office-tools/releases/tag/v1.1.0) - 2026-04-09
+
+- Add `type` to LoginResult to support either a redirect URL or an access token
+  - Add `login_result_type` to Titan configuration to specify which login result type to return
+
 ## [v1.0.3](https://github.com/upmind/provision-provider-office-tools/releases/tag/v1.0.3) - 2026-01-14
 
 - Add optional `invoice_number` to BillingParams; use as orderId in Titan create()

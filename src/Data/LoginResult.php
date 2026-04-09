@@ -8,14 +8,75 @@ use Upmind\ProvisionBase\Provider\DataSet\ResultData;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
 
 /**
- * @property-read string $url Login URL for the service
+ * @property-read string $type Login type for the service
+ * @property-read string|null $url Login Redirect URL
+ * @property-read string|null $token Control Panel Token
  */
 class LoginResult extends ResultData
 {
+    /**
+     * Login uses a redirect URL.
+     *
+     * @var string
+     */
+    public const TYPE_REDIRECT = 'redirect';
+
+    /**
+     * Login uses a token.
+     *
+     * @var string
+     */
+    public const TYPE_TOKEN = 'token';
+
+    public const VALID_TYPES = [
+        self::TYPE_REDIRECT,
+        self::TYPE_TOKEN,
+    ];
+
     public static function rules(): Rules
     {
         return new Rules([
-            'url' => ['required', 'string'],
+            'type' => ['required', 'in:' . implode(',', self::VALID_TYPES)],
+            'url' => [
+                'required_if:type,' . self::TYPE_REDIRECT,
+                'nullable',
+                'url',
+            ],
+            'token' => [
+                'required_if:type,' . self::TYPE_TOKEN,
+                'nullable',
+                'string'
+            ],
         ]);
+    }
+
+    /**
+     * @return self $this
+     */
+    public function setType(string $type): self
+    {
+        $this->setValue('type', $type);
+
+        return $this;
+    }
+
+    /**
+     * @return self $this
+     */
+    public function setUrl(?string $url): self
+    {
+        $this->setValue('url', $url);
+
+        return $this;
+    }
+
+    /**
+     * @return self $this
+     */
+    public function setToken(?string $token): self
+    {
+        $this->setValue('token', $token);
+
+        return $this;
     }
 }

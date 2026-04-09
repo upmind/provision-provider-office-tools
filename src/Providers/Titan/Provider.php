@@ -95,6 +95,21 @@ class Provider extends Category implements ProviderInterface
 
     public function login(LoginParams $params): LoginResult
     {
+        if ($this->configuration->login_result_type === LoginResult::TYPE_TOKEN) {
+            $payload = [
+                'customerId' => $params->customer_id,
+                'validityInMinutes' => 30 // Token valid for 30 minutes
+            ];
+
+            $responseData = $this->apiRequest('POST', 'partner/generateCPToken', $payload);
+
+            // Return the login result
+            return LoginResult::create()
+                ->setType(LoginResult::TYPE_TOKEN)
+                ->setToken($responseData['token']);
+        }
+
+        // default to redirect URL
         $partnerId = $this->configuration->client_id;
         $titanOrderId = $params->service_id;
         $expirationTime = time() + 300; // Token valid for 5 minutes
@@ -117,9 +132,9 @@ class Provider extends Category implements ProviderInterface
         ]);
 
         // Return the login result
-        return LoginResult::create([
-            'url' => $url,
-        ]);
+        return LoginResult::create()
+            ->setType(LoginResult::TYPE_REDIRECT)
+            ->setUrl($url);
     }
 
     public function renew(RenewParams $params): InfoResult
