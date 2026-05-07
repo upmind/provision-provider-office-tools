@@ -19,6 +19,8 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * @property-read string|null $status Service status
  * @property-read string|null $expiry_date Service expiry date
  * @property-read array|null $metadata Additional metadata
+ * @property-read string|null $control_panel_url URL for control panel access
+ * @property-read string|null $workspace_url URL for workspace/webmail access
  */
 class InfoResult extends ResultData
 {
@@ -34,6 +36,8 @@ class InfoResult extends ResultData
             'status' => ['nullable', 'string'],
             'expiry_date' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
+            'control_panel_url' => ['nullable', 'url'],
+            'workspace_url' => ['nullable', 'url'],
         ]);
     }
 }

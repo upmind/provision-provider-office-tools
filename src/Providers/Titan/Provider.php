@@ -268,6 +268,8 @@ class Provider extends Category implements ProviderInterface
         }
 
         $resultData = [
+            'control_panel_url' => $this->configuration->control_panel_url,
+            'workspace_url' => $this->configuration->webmail_url,
             'customer_id' => $customerId,
             'service_id' => (string)$order['titanOrderId'],
             'domain' => $order['domainName'],

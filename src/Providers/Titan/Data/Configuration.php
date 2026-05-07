@@ -15,6 +15,7 @@ use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
  * @property-read string $client_id API client ID
  * @property-read string $client_secret Authentication token for API access
  * @property-read string $control_panel_url URL for login redirects
+ * @property-read string|null $webmail_url Optional URL for Titan webmail access
  * @property-read bool $send_welcome_email Flag to send a Titan welcome email on create
  * @property-read string|null $login_section Section to redirect to after login
  * @property-read string|null $login_result_type Whether to return a redirect URL (default) or token on login
@@ -28,6 +29,7 @@ class Configuration extends DataSet
             'client_id' => ['required', 'string'],
             'client_secret' => ['required', 'string'],
             'control_panel_url' => ['required', 'url'],
+            'webmail_url' => ['nullable', 'url'],
             'send_welcome_email' => ['nullable', 'boolean'],
             'login_section' => ['nullable', 'string', 'in:home,email-accounts,internal-forward,catch-all-email,device-download,configure-desktop,domain-verification,import-email,billing-and-upgrade,buy-email-account'],
             'login_result_type' => ['nullable', 'string', 'in:' . implode(',', LoginResult::VALID_TYPES)],
