@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=7.4|>=8.1.0",
+        "php": "^7.4 || ^8.0",
         "upmind/provision-provider-base": "^3.7|^4.0",
         "firebase/php-jwt": "^v6.9",
         "myclabs/php-enum": "^1.8"
