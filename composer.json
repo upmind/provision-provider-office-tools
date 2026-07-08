@@ -23,6 +23,11 @@
             "Upmind\\ProvisionProviders\\OfficeTools\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Upmind\\ProvisionProviders\\OfficeTools\\Tests\\": "tests/"
+        }
+    },
     "config": {
         "audit": {
             "block-insecure": false
