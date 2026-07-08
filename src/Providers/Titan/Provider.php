@@ -14,6 +14,7 @@ use Throwable;
 use Upmind\ProvisionBase\Exception\ProvisionFunctionError;
 use Upmind\ProvisionBase\Provider\Contract\ProviderInterface;
 use Upmind\ProvisionBase\Provider\DataSet\AboutData;
+use Upmind\ProvisionProviders\DomainNames\Data\Enums\LoginType;
 use Upmind\ProvisionProviders\OfficeTools\Category;
 use Upmind\ProvisionProviders\OfficeTools\Data\ChangePackageParams;
 use Upmind\ProvisionProviders\OfficeTools\Data\CreateParams;
@@ -95,7 +96,10 @@ class Provider extends Category implements ProviderInterface
 
     public function login(LoginParams $params): LoginResult
     {
-        if ($this->configuration->login_result_type === LoginResult::TYPE_TOKEN) {
+        // Accept login type from params if provided, otherwise use configuration value or default (REDIRECT)
+        $loginType = $params->getLoginType() ?? $this->configuration->getLoginResultType();
+
+        if ($loginType->equals(LoginType::TOKEN())) {
             $payload = [
                 'customerId' => $params->customer_id,
                 'validityInMinutes' => 30 // Token valid for 30 minutes
@@ -104,9 +108,10 @@ class Provider extends Category implements ProviderInterface
             $responseData = $this->apiRequest('POST', 'partner/generateCPToken', $payload);
 
             // Return the login result
-            return LoginResult::create()
-                ->setType(LoginResult::TYPE_TOKEN)
-                ->setToken($responseData['token']);
+            return LoginResult::create([
+                'type' => $loginType->getValue(),
+                'token' => $responseData['token'],
+            ]);
         }
 
         // default to redirect URL
@@ -132,9 +137,10 @@ class Provider extends Category implements ProviderInterface
         ]);
 
         // Return the login result
-        return LoginResult::create()
-            ->setType(LoginResult::TYPE_REDIRECT)
-            ->setUrl($url);
+        return LoginResult::create([
+            'type' => $loginType->getValue(),
+            'url' => $url,
+        ]);
     }
 
     public function renew(RenewParams $params): InfoResult
