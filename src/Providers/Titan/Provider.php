@@ -97,7 +97,7 @@ class Provider extends Category implements ProviderInterface
     public function login(LoginParams $params): LoginResult
     {
         // Accept login type from params if provided, otherwise use configuration value or default (REDIRECT)
-        $loginType = $params->getLoginType() ?? $this->configuration->getLoginResultType();
+        $loginType = $params->getLoginTypeEnum() ?? $this->configuration->getLoginResultTypeEnum();
 
         if ($loginType->equals(LoginType::TOKEN())) {
             $payload = [

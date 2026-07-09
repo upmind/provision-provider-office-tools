@@ -37,7 +37,7 @@ class Configuration extends DataSet
         ]);
     }
 
-    public function getLoginResultType(): LoginType
+    public function getLoginResultTypeEnum(): LoginType
     {
         try {
             return LoginType::from($this->login_result_type);
