@@ -1,37 +1,38 @@
 {
-  "name": "upmind/provision-provider-office-tools",
-  "description": "Provisioning category/provider for professional office tools and services",
-  "type": "library",
-  "license": "GPL-3.0-only",
-  "authors": [
-    {
-      "name": "Nicolás Ramírez",
-      "email": "nicolas.ramirez@upmind.com"
+    "name": "upmind/provision-provider-office-tools",
+    "description": "Provisioning category/provider for professional office tools and services",
+    "type": "library",
+    "license": "GPL-3.0-only",
+    "authors": [
+        {
+            "name": "Nicolás Ramírez",
+            "email": "nicolas.ramirez@upmind.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "upmind/provision-provider-base": "^3.7|^4.0",
+        "firebase/php-jwt": "^v6.9",
+        "myclabs/php-enum": "^1.8"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Upmind\\ProvisionProviders\\OfficeTools\\": "src/"
+        }
+    },
+    "config": {
+        "audit": {
+            "block-insecure": false
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Upmind\\ProvisionProviders\\OfficeTools\\LaravelServiceProvider"
+            ]
+        }
     }
-  ],
-  "require": {
-    "php": ">=7.4|>=8.1.0",
-    "upmind/provision-provider-base": "^3.7|^4.0",
-    "firebase/php-jwt": "^v6.9"
-  },
-  "require-dev": {
-    "phpstan/phpstan": "^1.10"
-  },
-  "autoload": {
-    "psr-4": {
-      "Upmind\\ProvisionProviders\\OfficeTools\\": "src/"
-    }
-  },
-  "config": {
-    "audit": {
-      "block-insecure": false
-    }
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "Upmind\\ProvisionProviders\\OfficeTools\\LaravelServiceProvider"
-      ]
-    }
-  }
 }

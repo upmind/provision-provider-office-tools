@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Upmind\ProvisionProviders\OfficeTools\Providers\Titan\Data;
 
+use UnexpectedValueException;
 use Upmind\ProvisionBase\Provider\DataSet\DataSet;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
-use Upmind\ProvisionProviders\OfficeTools\Data\LoginResult;
+use Upmind\ProvisionProviders\DomainNames\Data\Enums\LoginType;
 
 /**
  * Configuration class for Titan Mail API
@@ -32,7 +33,16 @@ class Configuration extends DataSet
             'webmail_url' => ['nullable', 'url'],
             'send_welcome_email' => ['nullable', 'boolean'],
             'login_section' => ['nullable', 'string', 'in:home,email-accounts,internal-forward,catch-all-email,device-download,configure-desktop,domain-verification,import-email,billing-and-upgrade,buy-email-account'],
-            'login_result_type' => ['nullable', 'string', 'in:' . implode(',', LoginResult::VALID_TYPES)],
+            'login_result_type' => ['nullable', 'string', 'in:' . LoginType::stringifyValues()],
         ]);
+    }
+
+    public function getLoginResultTypeEnum(): LoginType
+    {
+        try {
+            return LoginType::from($this->login_result_type);
+        } catch (UnexpectedValueException $ex) {
+            return LoginType::REDIRECT(); // Default to REDIRECT if the value is invalid or not set
+        }
     }
 }

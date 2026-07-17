@@ -4,6 +4,7 @@
 help:
 	@echo "Available commands:"
 	@echo "   make help                  : List all available Makefile commands"
+	@echo "   make setup-php74           : Start the dev environment with PHP 7.4"
 	@echo "   make setup-php81           : Start the dev environment with PHP 8.1"
 	@echo "   make setup-php82           : Start the dev environment with PHP 8.2"
 	@echo "   make setup-php83           : Start the dev environment with PHP 8.3"
