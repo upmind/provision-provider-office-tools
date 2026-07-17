@@ -2,7 +2,7 @@
 
 All notable changes to the package will be documented in this file.
 
-## [v1.2.1](https://github.com/upmind/provision-provider-office-tools/releases/tag/v1.2.1) - 2026-07-17
+## [v1.3.0](https://github.com/upmind/provision-provider-office-tools/releases/tag/v1.3.0) - 2026-07-17
 
 - `login` method `LoginParams` now accept `login_type` to specify either `redirect` or `access_token` login result type
 
