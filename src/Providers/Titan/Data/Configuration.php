@@ -7,7 +7,7 @@ namespace Upmind\ProvisionProviders\OfficeTools\Providers\Titan\Data;
 use UnexpectedValueException;
 use Upmind\ProvisionBase\Provider\DataSet\DataSet;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
-use Upmind\ProvisionProviders\DomainNames\Data\Enums\LoginType;
+use Upmind\ProvisionProviders\OfficeTools\Data\Enums\LoginType;
 
 /**
  * Configuration class for Titan Mail API

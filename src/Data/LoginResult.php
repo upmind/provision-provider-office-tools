@@ -6,7 +6,7 @@ namespace Upmind\ProvisionProviders\OfficeTools\Data;
 
 use Upmind\ProvisionBase\Provider\DataSet\ResultData;
 use Upmind\ProvisionBase\Provider\DataSet\Rules;
-use Upmind\ProvisionProviders\DomainNames\Data\Enums\LoginType;
+use Upmind\ProvisionProviders\OfficeTools\Data\Enums\LoginType;
 
 /**
  * @property-read string $type Login type for the service, must be one of LoginType enum constants.

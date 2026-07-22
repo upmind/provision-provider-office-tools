@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Upmind\ProvisionProviders\DomainNames\Data\Enums;
+namespace Upmind\ProvisionProviders\OfficeTools\Data\Enums;
 
 use MyCLabs\Enum\Enum;
 
