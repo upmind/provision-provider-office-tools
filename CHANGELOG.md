@@ -2,6 +2,14 @@
 
 All notable changes to the package will be documented in this file.
 
+## Unreleased
+
+- Require PHP 8.3; support PHP 8.3, 8.4 and 8.5
+- Require `upmind/provision-provider-base` ^5.0 (Laravel 13, Guzzle 8)
+- Require `firebase/php-jwt` ^7.0
+- Update dev dependency `phpstan/phpstan` to ^2.0
+- Update Titan error handling to read the API response from Guzzle 8 `ResponseException`
+
 ## [v1.3.0](https://github.com/upmind/provision-provider-office-tools/releases/tag/v1.3.0) - 2026-07-17
 
 - `login` method `LoginParams` now accept `login_type` to specify either `redirect` or `access_token` login result type

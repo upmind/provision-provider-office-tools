@@ -7,7 +7,7 @@ namespace Upmind\ProvisionProviders\OfficeTools\Providers\Titan;
 use Carbon\Carbon;
 use Firebase\JWT\JWT;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ResponseException;
 use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\RequestOptions;
 use Throwable;
@@ -393,27 +393,26 @@ class Provider extends Category implements ProviderInterface
     protected function handleException(Throwable $e): void
     {
         if ($e instanceof TransferException) {
-            if ($e instanceof RequestException) {
-                if ($response = $e->getResponse()) {
-                    $statusCode = $response->getStatusCode();
-                    $body = (string)$response->getBody();
-                    $data = json_decode($body, true);
+            if ($e instanceof ResponseException) {
+                $response = $e->getResponse();
+                $statusCode = $response->getStatusCode();
+                $body = (string)$response->getBody();
+                $data = json_decode($body, true);
 
-                    $errorMessage = $response->getReasonPhrase();
+                $errorMessage = $response->getReasonPhrase();
 
-                    if (!empty($data['desc'])) {
-                        $errorMessage = $data['desc'];
-                    }
-
-                    if (!empty($data['attrs']['detail'])) {
-                        $errorMessage = $data['attrs']['detail'];
-                    }
-
-                    $this->errorResult(sprintf('Provider API Error: %s', $errorMessage), [
-                        'http_code' => $statusCode,
-                        'response' => $data ?? $body,
-                    ], [], $e);
+                if (!empty($data['desc'])) {
+                    $errorMessage = $data['desc'];
                 }
+
+                if (!empty($data['attrs']['detail'])) {
+                    $errorMessage = $data['attrs']['detail'];
+                }
+
+                $this->errorResult(sprintf('Provider API Error: %s', $errorMessage), [
+                    'http_code' => $statusCode,
+                    'response' => $data ?? $body,
+                ], [], $e);
             }
 
             $this->errorResult('Provider API Request Failed', [
